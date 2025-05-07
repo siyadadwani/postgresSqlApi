@@ -14,9 +14,9 @@ app.get('/',async(req,res)=>{
     }
 });
 
-app.get('/region',async(req,res)=>{
+app.get('/record',async(req,res)=>{
     try{
-       const result = await pool.query('select * from regions');
+       const result = await pool.query('select r.region_id,r.region_name, c.country_id,c.country_name,l.location_id,l.postal_code,l.city from regions r inner join countries c on r.region_id = c.region_id inner join locations l on c.country_id =l.country_id limit 2');
        res.json(result.rows);
     }catch(err){
         res.status(500).json({Error:err.message})
@@ -131,7 +131,7 @@ app.get('/location',async(req,res)=>{
     }
 });
 
-const PORT = process.env.PORT || 6007;
+const PORT = process.env.PORT || 6009;
 app.listen(PORT,()=>{
     console.log(`Connected Successfully...on PORT ${PORT}`)
 });
