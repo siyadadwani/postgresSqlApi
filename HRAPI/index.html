@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Library System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-gray-800 font-sans">
+
+  <!-- Navigation Bar -->
+  <nav class="bg-white shadow-md px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-4">
+      <span class="text-xl font-bold">Library</span>
+      <a href="#" class="flex items-center space-x-1 text-gray-600 hover:text-black">
+        <span>🏠</span><span>Home</span>
+      </a>
+      <a href="books.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
+        <span>📚</span><span>Books</span>
+      </a>
+      <a href="member.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
+        <span>👤</span><span>Members</span>
+      </a>
+      <a href="bookIssue.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
+        <span>📄</span><span>Issue Book</span>
+      </a>
+      <a href="returnbook.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
+        <span>🔄</span><span>Return Book</span>
+      </a>
+      <a href="reports.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
+        <span>📊</span><span>Reports</span>
+      </a>
+    </div>
+    <button id="loginBtn" class="bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">Login</button>
+  </nav>
+
+  <!-- Main Section -->
+  <main class="p-8">
+    <h1 class="text-2xl font-semibold mb-2">Welcome to the Library System</h1>
+    <p class="text-gray-600 mb-8">Manage books, members, and transactions with ease.</p>
+
+    <!-- Cards Section -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <!-- Books Card -->
+      <div class="bg-gray-50 p-6 rounded-lg shadow">
+        <div class="text-3xl mb-2">📚</div>
+        <h2 class="text-xl font-bold mb-1">Books</h2>
+        <p class="text-gray-600 mb-4">Browse and manage all library books.</p>
+        <a href="books.html" class="inline-block bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">View Books</a>
+      </div>
+
+      <!-- Members Card -->
+      <div class="bg-gray-50 p-6 rounded-lg shadow">
+        <div class="text-3xl mb-2">👤</div>
+        <h2 class="text-xl font-bold mb-1">Members</h2>
+        <p class="text-gray-600 mb-4">View and manage library members.</p>
+        <a href="member.html" class="inline-block bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">View Members</a>
+      </div>
+
+      <!-- Issue Book Card -->
+      <div class="bg-gray-50 p-6 rounded-lg shadow">
+        <div class="text-3xl mb-2">📄</div>
+        <h2 class="text-xl font-bold mb-1">Issue Book</h2>
+        <p class="text-gray-600 mb-4">Issue books to members quickly.</p>
+        <a href="book_issue.html" class="inline-block bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">Issue Book</a>
+      </div>
+
+      <!-- Return Book Card -->
+      <div class="bg-gray-50 p-6 rounded-lg shadow">
+        <div class="text-3xl mb-2">🔄</div>
+        <h2 class="text-xl font-bold mb-1">Return Book</h2>
+        <p class="text-gray-600 mb-4">Process book returns efficiently.</p>
+        <a href="returnbook.html" class="inline-block bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">Return Book</a>
+      </div>
+
+      <!-- Reports Card -->
+      <div class="bg-gray-50 p-6 rounded-lg shadow">
+        <div class="text-3xl mb-2">📊</div>
+        <h2 class="text-xl font-bold mb-1">Reports</h2>
+        <p class="text-gray-600 mb-4">View and export library reports.</p>
+        <a href="reports.html" class="inline-block bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">View Reports</a>
+      </div>
+
+      <!-- Location Card -->
+      <div class="bg-gray-50 p-6 rounded-lg shadow">
+        <div class="text-3xl mb-2">📍</div>
+        <h2 class="text-xl font-bold mb-1">Location</h2>
+        <p class="text-gray-600 mb-4">Manage library locations.</p>
+        <a href="location.html" class="inline-block bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">Add Location</a>
+
+      </div>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById('loginBtn').addEventListener('click', () => {
+      window.location.href = 'login.html';
+    });
+  </script>
+</body>
+</html>

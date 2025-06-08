@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Return Book - Library System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-gray-800 font-sans">
+
+  <!-- Navigation Bar -->
+  <nav class="bg-white shadow-md px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-4">
+      <span class="text-xl font-bold">Library</span>
+      <a href="index.html" class="text-gray-600 hover:text-black">Home</a>
+      <a href="book.html" class="text-gray-600 hover:text-black">Books</a>
+      <a href="members.html" class="text-gray-600 hover:text-black">Members</a>
+      <a href="issuebook.html" class="text-gray-600 hover:text-black">Issue Book</a>
+      <a href="return-book.html" class="text-black font-semibold">Return Book</a>
+      <a href="#" class="text-gray-600 hover:text-black">Reports</a>
+    </div>
+    <button class="bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">Login</button>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="p-8 max-w-2xl mx-auto">
+    <h1 class="text-2xl font-semibold mb-6">Return Book</h1>
+
+    <form id="returnBookForm" class="bg-gray-50 p-6 rounded-lg shadow space-y-4">
+      <div>
+        <label for="memberId" class="block text-sm font-medium text-gray-700">Member ID</label>
+        <input type="text" id="memberId" name="member_id" required placeholder="Enter Member ID"
+          class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-teal-500" />
+      </div>
+
+      <div>
+        <label for="bookId" class="block text-sm font-medium text-gray-700">Book ID</label>
+        <input type="text" id="bookId" name="book_id" required placeholder="Enter Book ID"
+          class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-teal-500" />
+      </div>
+
+      <div>
+        <label for="returnDate" class="block text-sm font-medium text-gray-700">Return Date</label>
+        <input type="date" id="returnDate" name="return_date" required
+          class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-teal-500" />
+      </div>
+
+      <div class="pt-4">
+        <button type="submit" class="bg-teal-500 text-white px-6 py-2 rounded hover:bg-teal-600">Return Book</button>
+      </div>
+    </form>
+  </main>
+
+  <script>
+    const returnBookForm = document.getElementById('returnBookForm');
+
+    returnBookForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const member_id = returnBookForm.member_id.value.trim();
+      const book_id = returnBookForm.book_id.value.trim();
+      const return_date = returnBookForm.return_date.value;
+
+      if (!member_id || !book_id || !return_date) {
+        alert('Please fill all fields.');
+        return;
+      }
+
+      try {
+        const response = await fetch('https://psychic-space-doodle-7vw67vxg94p5cx9x-5005.app.github.dev/returnbook', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ member_id, book_id, return_date }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to return book.');
+        }
+
+        alert('Book returned successfully!');
+        returnBookForm.reset();
+      } catch (err) {
+        alert(`Error: ${err.message}`);
+      }
+    });
+  </script>
+</body>
+</html>
