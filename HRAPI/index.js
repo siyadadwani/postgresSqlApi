@@ -25,39 +25,42 @@ app.get('/', (req, res) => {
 
 
 
-// Add book to database
+
+// POST /books — Add a new book
 app.post('/books', async (req, res) => {
   try {
-    console.log('Received POST /books:', req.body); // LOG request
+    console.log('POST /books body:', req.body);
 
-    const { title, author, genre, copies } = req.body;
+    const { title, author_id, category_id, location_id, genre, copies, staff_id, fine_id } = req.body;
 
-    const newBook = await pool.query(
-      `INSERT INTO books (title, author, genre, copies) VALUES ($1, $2, $3, $4) RETURNING *`,
-      [title, author, genre, copies]
+    if (!title || !author_id || !category_id || !location_id || !genre || copies == null || !staff_id || !fine_id) {
+      return res.status(400).json({ error: 'Missing required book fields' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO books (title, author_id, category_id, location_id, genre, copies, staff_id, fine_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [title, author_id, category_id, location_id, genre, copies, staff_id, fine_id]
     );
 
-    res.status(201).json(newBook.rows[0]);
+    res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error('Database Insert Error:', err); // LOG the real error
-    res.status(500).json({ error: 'Server Error' });
+    console.error('Database Insert Error:', err);
+    res.status(500).json({ error: 'Server Error while adding book' });
   }
 });
 
-
-
-// GET endpoint to get all books
+// GET /books — Retrieve all books
 app.get('/books', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM books ORDER BY book_id');
+    const result = await pool.query(`SELECT * FROM books ORDER BY book_id`);
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching books:', err);
     res.status(500).json({ error: 'Database error while fetching books' });
   }
 });
-
-
 
 
 
@@ -129,46 +132,6 @@ app.get('/issuebook', async (req, res) => {
 });
 
 
-
-app.post('/returnbook', async (req, res) => {
-  try {
-    const { member_id, book_id, return_date } = req.body;
-
-    if (!member_id || !book_id || !return_date) {
-      return res.status(400).json({ error: 'Missing fields' });
-    }
-
-    // Check if book is issued
-    const checkIssue = await pool.query(
-      'SELECT * FROM issuebook WHERE member_id = $1 AND book_id = $2',
-      [member_id, book_id]
-    );
-    if (checkIssue.rows.length === 0) {
-      return res.status(400).json({ error: 'No issued record found for this member and book' });
-    }
-
-    // Check if already returned
-    const checkReturn = await pool.query(
-      'SELECT * FROM returnbook WHERE member_id = $1 AND book_id = $2',
-      [member_id, book_id]
-    );
-    if (checkReturn.rows.length > 0) {
-      return res.status(400).json({ error: 'Book already returned' });
-    }
-
-    // Insert return record
-    const newReturn = await pool.query(
-      `INSERT INTO returnbook (member_id, book_id, return_date) VALUES ($1, $2, $3) RETURNING *`,
-      [member_id, book_id, return_date]
-    );
-
-    res.status(201).json(newReturn.rows[0]);
-  } catch (err) {
-    console.error('Database Insert Error (returnbook):', err.stack);
-    res.status(500).json({ error: 'Server Error' });
-  }
-});
-
 app.get('/returnbook', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM returnbook ORDER BY return_id');
@@ -178,6 +141,64 @@ app.get('/returnbook', async (req, res) => {
     res.status(500).json({ error: 'Database error while fetching returned books' });
   }
 });
+
+
+app.post('/returnbook', async (req, res) => {
+  const client = await pool.connect();  // Use a client for transaction
+
+  try {
+    const { member_id, book_id, return_date } = req.body;
+
+    if (!member_id || !book_id || !return_date) {
+      return res.status(400).json({ error: 'Missing fields' });
+    }
+
+    await client.query('BEGIN');  // Start transaction
+
+    // Check if book is issued
+    const checkIssue = await client.query(
+      'SELECT * FROM issuebook WHERE member_id = $1 AND book_id = $2',
+      [member_id, book_id]
+    );
+    if (checkIssue.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'No issued record found for this member and book' });
+    }
+
+    // Check if already returned
+    const checkReturn = await client.query(
+      'SELECT * FROM returnbook WHERE member_id = $1 AND book_id = $2',
+      [member_id, book_id]
+    );
+    if (checkReturn.rows.length > 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Book already returned' });
+    }
+
+    // Insert into returnbook
+    const newReturn = await client.query(
+      `INSERT INTO returnbook (member_id, book_id, return_date) VALUES ($1, $2, $3) RETURNING *`,
+      [member_id, book_id, return_date]
+    );
+
+    // Delete from issuebook after successful return
+    await client.query(
+      'DELETE FROM issuebook WHERE member_id = $1 AND book_id = $2',
+      [member_id, book_id]
+    );
+
+    await client.query('COMMIT');  // Commit transaction
+
+    res.status(201).json(newReturn.rows[0]);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Database Insert Error (returnbook):', err.stack);
+    res.status(500).json({ error: 'Server Error' });
+  } finally {
+    client.release();
+  }
+});
+
 
 
 // count 
@@ -307,6 +328,83 @@ app.get('/authors', async (req, res) => {
 });
 app.get('/author', (req, res) => {
   res.redirect('/authors');
+});
+
+app.post('/staff', async (req, res) => {
+  const { name, email, phone, role, password } = req.body;
+  console.log("Incoming data:", req.body);
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO staff (name, email, phone, role, password)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [name, email, phone, role, password]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to add staff' });
+  }
+});
+
+
+// GET to fetch all staff members
+app.get('/staff', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM staff ORDER BY staff_id');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching staff:', err);
+    res.status(500).json({ error: 'Database error while fetching staff' });
+  }
+});
+ 
+// POST to create a new fine
+app.post('/fines', async (req, res) => {
+  const { member_id, book_id, issue_id, fine_amount, fine_reason, fine_date, status } = req.body;
+  console.log("Incoming fine data:", req.body);
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO fines (member_id, book_id, issue_id, fine_amount, fine_reason, fine_date, status)
+       VALUES ($1, $2, $3, $4, $5, COALESCE($6, CURRENT_DATE), COALESCE($7, 'Unpaid'))
+       RETURNING *`,
+      [member_id, book_id, issue_id, fine_amount, fine_reason, fine_date, status]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to add fine' });
+  }
+});
+
+// GET to fetch all fines
+app.get('/fines', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM fines ORDER BY fine_id');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching fines:', error);
+    res.status(500).json({ error: 'Database error while fetching fines' });
+  }
+});
+
+// chart
+app.get('/api/most-borrowed-books', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT b.title, COUNT(*) AS borrow_count
+      FROM issuebooks i
+      JOIN books b ON i.book_id = b.book_id
+      GROUP BY b.title
+      ORDER BY borrow_count DESC
+      LIMIT 5
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching most borrowed books:', err);
+    res.status(500).json({ error: 'Database error while fetching report' });
+  }
 });
 
 // Start server

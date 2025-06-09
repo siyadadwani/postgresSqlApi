@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Most Borrowed Books - Library Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+  <!-- Navbar -->
+  <nav class="bg-white shadow-md px-6 py-4 flex justify-between items-center">
+    <div class="text-xl font-bold text-teal-600">Library Dashboard</div>
+    <div class="space-x-4">
+      <a href="index.html" class="text-gray-600 hover:text-black">Home</a>
+      <a href="books.html" class="text-gray-600 hover:text-black">Books</a>
+      <a href="members.html" class="text-gray-600 hover:text-black">Members</a>
+      <a href="issue_book.html" class="text-gray-600 hover:text-black">Issue Book</a>
+      <a href="return_book.html" class="text-gray-600 hover:text-black">Return Book</a>
+      <a href="#" class="text-black font-semibold">Reports</a>
+    </div>
+  </nav>
+
+  <!-- Page Content -->
+  <main class="p-8">
+    <h1 class="text-2xl font-semibold mb-4">📊 Most Borrowed Books</h1>
+    
+    <div class="bg-white p-6 rounded shadow-md">
+      <canvas id="borrowedBooksChart" height="120"></canvas>
+      <p id="loading" class="mt-4 text-gray-500">Loading chart...</p>
+    </div>
+  </main>
+
+  <!-- JS for Chart -->
+  <script>
+  // Setup Chart.js chart context
+  const ctx = document.getElementById('borrowedBooksChart').getContext('2d');
+
+  // Define a set of colors to assign to bars
+  const barColors = [
+    'rgba(248, 113, 113, 0.7)',  // red-400
+    'rgba(96, 165, 250, 0.7)',   // blue-400
+    'rgba(52, 211, 153, 0.7)',   // green-400
+    'rgba(251, 191, 36, 0.7)',   // yellow-400
+    'rgba(167, 139, 250, 0.7)',  // purple-400
+    'rgba(251, 146, 60, 0.7)',   // orange-400
+    'rgba(244, 114, 182, 0.7)',  // pink-400
+    'rgba(59, 130, 246, 0.7)',   // blue-500
+    'rgba(16, 185, 129, 0.7)',   // emerald-500
+    'rgba(192, 132, 252, 0.7)'   // violet-400
+  ];
+
+  // Create chart with empty data first
+  const borrowedBooksChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Number of Times Borrowed',
+        data: [],
+        backgroundColor: [], // Will be filled dynamically
+        borderColor: 'rgba(56, 178, 172, 1)',
+        borderWidth: 1,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        },
+        title: {
+          display: true,
+          text: 'Top 5 Most Borrowed Books'
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Borrow Count'
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Book Title'
+          }
+        }
+      }
+    }
+  });
+
+  // Fetch data from backend API
+  fetch('https://psychic-space-doodle-7vw67vxg94p5cx9x-5005.app.github.dev/api/most-borrowed-books')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      const titles = data.map(book => book.title);
+      const counts = data.map(book => book.borrow_count);
+
+      borrowedBooksChart.data.labels = titles;
+      borrowedBooksChart.data.datasets[0].data = counts;
+
+      // Assign different colors for each bar
+      borrowedBooksChart.data.datasets[0].backgroundColor = titles.map((_, index) => {
+        return barColors[index % barColors.length]; // Rotate if more books than colors
+      });
+
+      borrowedBooksChart.update();
+      document.getElementById("loading").style.display = "none";
+    })
+    .catch(error => {
+      console.error("Error fetching chart data:", error);
+      document.getElementById("loading").textContent = "Failed to load chart data.";
+    });
+</script>
+
+
+</body>
+</html>

@@ -21,17 +21,17 @@
       <a href="member.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
         <span>👤</span><span>Members</span>
       </a>
-      <a href="bookIssue.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
+      <a href="book_issue.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
         <span>📄</span><span>Issue Book</span>
       </a>
-      <a href="returnbook.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
+      <a href="retrunbook.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
         <span>🔄</span><span>Return Book</span>
       </a>
       <a href="reports.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
         <span>📊</span><span>Reports</span>
       </a>
       <a href="location.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
-        <span>📁</span><span>locations</span>
+        <span>📍</span><span>Locations</span>
       </a>
       <a href="categories.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
         <span>📁</span><span>Categories</span>
@@ -39,8 +39,16 @@
       <a href="authors.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
         <span>✍️</span><span>Authors</span>
       </a>
+      <a href="staff.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
+        <span>👥</span><span>Staff</span>
+      </a>
+      <a href="fine.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
+        <span>💰</span><span>Fine</span>
+      </a>
+      <a href="chart.html" class="flex items-center space-x-1 text-gray-600 hover:text-black">
+        <span>📊</span><span>Chart</span>
+      </a>
     </div>
-
   </nav>
 
   <!-- Main Section -->
@@ -115,13 +123,38 @@
         <a href="author.html" class="inline-block bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">View Authors</a>
       </div>
 
+      <!-- Staff Card -->
+      <div class="bg-gray-50 p-6 rounded-lg shadow">
+        <div class="text-3xl mb-2">👥</div>
+        <h2 class="text-xl font-bold mb-1">Staff</h2>
+        <p class="text-gray-600 mb-4">Manage library staff members.</p>
+        <a href="staff.html" class="inline-block bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">View Staff</a>
+      </div>
+
+      <!-- Fine Card -->
+      <div class="bg-gray-50 p-6 rounded-lg shadow">
+        <div class="text-3xl mb-2">💰</div>
+        <h2 class="text-xl font-bold mb-1">Fine</h2>
+        <p class="text-gray-600 mb-4">Manage fines for overdue books.</p>
+        <a href="fine.html" class="inline-block bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">View Fine</a>
+      </div>
+
+      <!-- chart -->
+       <div class="bg-gray-50 p-6 rounded-lg shadow">
+        <div class="text-3xl mb-2">📊</div>
+        <h2 class="text-xl font-bold mb-1">Chart</h2>
+        <p class="text-gray-600 mb-4"></p>
+        <a href="chart.html" class="inline-block bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">View chart</a>
+      </div>
+
     </div>
   </main>
 
   <script>
-    document.getElementById('loginBtn').addEventListener('click', () => {
+    document.getElementById('loginBtn')?.addEventListener('click', () => {
       window.location.href = 'login.html';
     });
   </script>
+
 </body>
 </html>

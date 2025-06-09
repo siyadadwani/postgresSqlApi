@@ -141,10 +141,7 @@
         alert(error.message);
       }
     });
-
-
-
-    async function fetchmembers() {
+async function fetchMembers() {
   try {
     const response = await fetch('https://psychic-space-doodle-7vw67vxg94p5cx9x-5005.app.github.dev/members');
     if (!response.ok) throw new Error('Failed to fetch members');
@@ -171,7 +168,9 @@
   }
 }
 
-fetchmembers(); // Call the function immediately
+fetchMembers(); // Call the function immediately
+
+
   </script>
 
 </body>

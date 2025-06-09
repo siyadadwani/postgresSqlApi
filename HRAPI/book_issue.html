@@ -167,6 +167,34 @@
         alert(error.message);
       }
     });
+
+
+    async function fetchIssuedBooks() {
+  try {
+    const response = await fetch('https://psychic-space-doodle-7vw67vxg94p5cx9x-5005.app.github.dev/issuebook');
+    if (!response.ok) throw new Error('Failed to fetch issued books');
+    const issuedBooks = await response.json();
+
+    issuedBooksTableBody.innerHTML = '';
+    issuedBooks.forEach(issue => {
+      const tr = document.createElement('tr');
+      tr.classList.add('border-b', 'hover:bg-gray-50');
+      tr.innerHTML = `
+        <td class="px-6 py-4">${issue.issue_id || '-'}</td>
+        <td class="px-6 py-4">${issue.member_id}</td>
+        <td class="px-6 py-4">${issue.book_id}</td>
+        <td class="px-6 py-4">${issue.issue_date}</td>
+        <td class="px-6 py-4">${issue.due_date}</td>
+      `;
+      issuedBooksTableBody.appendChild(tr);
+    });
+  } catch (error) {
+    console.error('Error fetching issued books:', error);
+  }
+}
+
+fetchIssuedBooks(); // Call immediately
+
   </script>
 </body>
 </html>
