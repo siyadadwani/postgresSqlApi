@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Authors - Library System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-gray-800 font-sans">
+
+  <!-- Navigation Bar -->
+  <nav class="bg-white shadow-md px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-4">
+      <span class="text-xl font-bold">Library</span>
+      <a href="index.html" class="text-gray-600 hover:text-black">Home</a>
+      <a href="book.html" class="text-gray-600 hover:text-black">Books</a>
+      <a href="members.html" class="text-gray-600 hover:text-black">Members</a>
+      <a href="issuebook.html" class="text-gray-600 hover:text-black">Issue Book</a>
+      <a href="return-book.html" class="text-gray-600 hover:text-black">Return Book</a>
+      <a href="categories.html" class="text-gray-600 hover:text-black">Categories</a>
+      <a href="#" class="text-black font-semibold">Authors</a>
+      <a href="reports.html" class="text-gray-600 hover:text-black">Reports</a>
+    </div>
+  
+  </nav>
+
+  <!-- Main Content -->
+  <main class="p-8 max-w-2xl mx-auto">
+    <h1 class="text-2xl font-semibold mb-6">Add Author</h1>
+
+    <form id="authorForm" class="bg-gray-50 p-6 rounded-lg shadow space-y-4">
+      <div>
+        <label for="authorName" class="block text-sm font-medium text-gray-700">Author Name</label>
+        <input type="text" id="authorName" name="author_name" required placeholder="Enter Author Name"
+          class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-teal-500" />
+      </div>
+
+      <div class="pt-4">
+        <button type="submit" class="bg-teal-500 text-white px-6 py-2 rounded hover:bg-teal-600">Add Author</button>
+      </div>
+    </form>
+
+    <!-- Display Author Table -->
+    <div class="mt-10">
+      <h2 class="text-xl font-semibold mb-4">All Authors</h2>
+      <table class="min-w-full bg-white border border-gray-300 rounded shadow">
+        <thead class="bg-gray-100 text-left">
+          <tr>
+            <th class="p-3 border-b">Author ID</th>
+            <th class="p-3 border-b">Author Name</th>
+          </tr>
+        </thead>
+        <tbody id="authorTableBody" class="text-sm"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    const authorForm = document.getElementById('authorForm');
+    const authorTableBody = document.getElementById('authorTableBody');
+
+    // Submit form
+    authorForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const author_name = authorForm.author_name.value.trim();
+
+      if (!author_name) {
+        alert('Please enter an author name.');
+        return;
+      }
+
+      try {
+        const response = await fetch('https://psychic-space-doodle-7vw67vxg94p5cx9x-5005.app.github.dev/authors', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ author_name }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to add author.');
+        }
+
+        alert('Author added successfully!');
+        authorForm.reset();
+        loadAuthors();
+      } catch (err) {
+        alert(`Error: ${err.message}`);
+      }
+    });
+
+    // Load and display authors
+    async function loadAuthors() {
+      try {
+        const res = await fetch('https://psychic-space-doodle-7vw67vxg94p5cx9x-5005.app.github.dev/authors');
+        const authors = await res.json();
+
+        authorTableBody.innerHTML = authors.map(author => `
+          <tr>
+            <td class="p-3 border-b">${author.author_id}</td>
+            <td class="p-3 border-b">${author.author_name}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Error loading authors:', err.message);
+      }
+    }
+
+    // Load on page start
+    loadAuthors();
+  </script>
+</body>
+</html>

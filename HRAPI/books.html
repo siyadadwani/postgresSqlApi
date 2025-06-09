@@ -19,7 +19,7 @@
       <a href="return_book.html" class="text-gray-600 hover:text-black">Return Book</a>
       <a href="reports.html" class="text-gray-600 hover:text-black">Reports</a>
     </div>
-    <button class="bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">Login</button>
+    
   </nav>
 
   <!-- Add Book Button -->
@@ -131,6 +131,39 @@
         alert(error.message);
       }
     });
+
+
+
+    async function fetchBooks() {
+  try {
+    const response = await fetch('https://psychic-space-doodle-7vw67vxg94p5cx9x-5005.app.github.dev/books');
+    if (!response.ok) throw new Error('Failed to fetch books');
+    const books = await response.json();
+
+    booksTableBody.innerHTML = '';
+    books.forEach(book => {
+      const tr = document.createElement('tr');
+      tr.classList.add('border-b', 'hover:bg-gray-50');
+      tr.innerHTML = `
+        <td class="px-6 py-4">${book.book_id}</td>
+        <td class="px-6 py-4">${book.title}</td>
+        <td class="px-6 py-4">${book.author}</td>
+        <td class="px-6 py-4">${book.genre}</td>
+        <td class="px-6 py-4">${book.copies}</td>
+        <td class="px-6 py-4 space-x-2">
+          <button class="text-blue-600 hover:underline">Edit</button>
+          <button class="text-red-600 hover:underline">Delete</button>
+        </td>
+      `;
+      booksTableBody.appendChild(tr);
+    });
+  } catch (error) {
+    console.error('Error fetching books:', error);
+  }
+}
+
+fetchBooks();
+
   </script>
 
 </body>

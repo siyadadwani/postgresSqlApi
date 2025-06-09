@@ -3,13 +3,21 @@ const cors = require('cors');
 const pool = require('./db');
 require('dotenv').config();
 
-
+const path = require('path');
 const app = express();
+app.use('/HRAPI', express.static(path.join(__dirname, 'public')));
+// app.listen(3000, () => {
+//   console.log('Server started on port 3000');
+// });
+
+
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+//app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static('public'));  // Serve static frontend files
-
+app.use('/HRAPI', express.static(path.join(__dirname, 'public', 'HRAPI')));
 // Test GET route
 app.get('/', (req, res) => {
   res.send('Server is running!');
@@ -52,18 +60,24 @@ app.get('/books', async (req, res) => {
 
 
 
+
+
 app.post('/members', async (req, res) => {
   try {
-    console.log('Received POST /members:', req.body);
+    console.log('POST /members body:', req.body);
 
-    const { name, email, membership_date } = req.body;  // no member_id here
+    const { name, email, membership_date } = req.body;
+
+    if (!name || !email || !membership_date) {
+      return res.status(400).json({ error: 'Missing required member fields' });
+    }
 
     const newMember = await pool.query(
       `INSERT INTO members (name, email, membership_date) VALUES ($1, $2, $3) RETURNING *`,
       [name, email, membership_date]
     );
 
-    res.status(201).json(newMember.rows[0]);  // this includes generated member_id
+    res.status(201).json(newMember.rows[0]);
   } catch (err) {
     console.error('Database Insert Error:', err);
     res.status(500).json({ error: 'Server Error' });
@@ -71,7 +85,6 @@ app.post('/members', async (req, res) => {
 });
 
 
-// GET endpoint to get all members
 app.get('/members', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM members ORDER BY member_id');
@@ -117,23 +130,33 @@ app.get('/issuebook', async (req, res) => {
 
 
 
-
-
 app.post('/returnbook', async (req, res) => {
   try {
     const { member_id, book_id, return_date } = req.body;
 
-    // Check if the book is currently issued (exists in issuebook)
+    if (!member_id || !book_id || !return_date) {
+      return res.status(400).json({ error: 'Missing fields' });
+    }
+
+    // Check if book is issued
     const checkIssue = await pool.query(
-      `SELECT * FROM issuebook WHERE member_id = $1 AND book_id = $2`,
+      'SELECT * FROM issuebook WHERE member_id = $1 AND book_id = $2',
       [member_id, book_id]
     );
-
     if (checkIssue.rows.length === 0) {
       return res.status(400).json({ error: 'No issued record found for this member and book' });
     }
 
-    // Insert into returnbook table
+    // Check if already returned
+    const checkReturn = await pool.query(
+      'SELECT * FROM returnbook WHERE member_id = $1 AND book_id = $2',
+      [member_id, book_id]
+    );
+    if (checkReturn.rows.length > 0) {
+      return res.status(400).json({ error: 'Book already returned' });
+    }
+
+    // Insert return record
     const newReturn = await pool.query(
       `INSERT INTO returnbook (member_id, book_id, return_date) VALUES ($1, $2, $3) RETURNING *`,
       [member_id, book_id, return_date]
@@ -145,6 +168,7 @@ app.post('/returnbook', async (req, res) => {
     res.status(500).json({ error: 'Server Error' });
   }
 });
+
 app.get('/returnbook', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM returnbook ORDER BY return_id');
@@ -154,6 +178,7 @@ app.get('/returnbook', async (req, res) => {
     res.status(500).json({ error: 'Database error while fetching returned books' });
   }
 });
+
 
 // count 
 app.get("/count", async (req, res) => {
@@ -210,6 +235,79 @@ app.get('/locations', async (req, res) => {
   }
 });
 
+  
+// Add a new category
+app.post('/categories', async (req, res) => {
+  try {
+    const { category_name } = req.body;
+
+    const insertCategory = await pool.query(
+      `INSERT INTO categories (category_name) VALUES ($1) RETURNING *`,
+      [category_name]
+    );
+
+    res.status(201).json(insertCategory.rows[0]);
+  } catch (err) {
+    console.error('Error adding category:', err.stack);
+    if (err.code === '23505') {
+      // Unique violation
+      res.status(400).json({ error: 'Category already exists.' });
+    } else {
+      res.status(500).json({ error: 'Server error while adding category.' });
+    }
+  }
+});
+
+// Get all categories
+app.get('/categories', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT category_id, category_name, created_at FROM categories ORDER BY category_id`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching categories:', err.stack);
+    res.status(500).json({ error: 'Database error while fetching categories' });
+  }
+});
+
+// Add a new author
+app.post('/authors', async (req, res) => {
+  try {
+    const { author_name } = req.body;
+
+    const insertAuthor = await pool.query(
+      `INSERT INTO author (author_name) VALUES ($1) RETURNING *`,
+      [author_name]
+    );
+
+    res.status(201).json(insertAuthor.rows[0]);
+  } catch (err) {
+    console.error('Error adding author:', err.stack);
+    if (err.code === '23505') {
+      // Unique violation (author_name already exists)
+      res.status(400).json({ error: 'Author already exists.' });
+    } else {
+      res.status(500).json({ error: 'Server error while adding author.' });
+    }
+  }
+});
+
+// Get all authors
+app.get('/authors', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT author_id, author_name FROM author ORDER BY author_id`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching authors:', err.stack);
+    res.status(500).json({ error: 'Database error while fetching authors' });
+  }
+});
+app.get('/author', (req, res) => {
+  res.redirect('/authors');
+});
 
 // Start server
 const PORT = process.env.PORT || 5005;
