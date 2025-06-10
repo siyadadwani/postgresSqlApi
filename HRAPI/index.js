@@ -105,11 +105,11 @@ app.post('/issuebook', async (req, res) => {
   try {
     console.log('Received POST /issuebook:', req.body);
 
-    const { book_id, member_id, issue_date, due_date } = req.body;
+    const { member_id, book_id, issue_date, due_date } = req.body;
 
     const newIssue = await pool.query(
       `INSERT INTO issuebook (member_id, book_id, issue_date, due_date) VALUES ($1, $2, $3, $4) RETURNING *`,
-      [book_id, member_id, issue_date, due_date ]
+      [member_id, book_id, issue_date, due_date ]
     );
 
     res.status(201).json(newIssue.rows[0]);
