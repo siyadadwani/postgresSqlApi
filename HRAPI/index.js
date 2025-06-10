@@ -31,17 +31,17 @@ app.post('/books', async (req, res) => {
   try {
     console.log('POST /books body:', req.body);
 
-    const { title, author_id, category_id, location_id, genre, copies, staff_id, fine_id } = req.body;
+    const { title, genre, copies, author_id, category_id, location_id, staff_id } = req.body;
 
-    if (!title || !author_id || !category_id || !location_id || !genre || copies == null || !staff_id || !fine_id) {
+    if (!title || !genre|| !copies == null || !author_id || !category_id || !location_id || !staff_id){
       return res.status(400).json({ error: 'Missing required book fields' });
     }
 
     const result = await pool.query(
-      `INSERT INTO books (title, author_id, category_id, location_id, genre, copies, staff_id, fine_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO books (title, genre , copies , author_id, category_id, location_id, staff_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [title, author_id, category_id, location_id, genre, copies, staff_id, fine_id]
+      [title, genre , copies , author_id, category_id, location_id, staff_id]
     );
 
     res.status(201).json(result.rows[0]);
@@ -62,13 +62,79 @@ app.get('/books', async (req, res) => {
   }
 });
 
+// UPDATE /books/:id — Update an existing book
+app.put('/books/:id', async (req, res) => {
+  try {
+    const bookId = parseInt(req.params.id);
+    const {
+      title, author_id, category_id, location_id,
+      genre, copies, staff_id
+    } = req.body;
+
+    if (!title || !author_id || !category_id || !location_id || !genre || copies == null || !staff_id ) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const updateResult = await pool.query(
+      `UPDATE books SET
+        title = $1,
+        author_id = $2,
+        category_id = $3,
+        location_id = $4,
+        genre = $5,
+        copies = $6,
+        staff_id = $7,
+       WHERE book_id = $8
+       RETURNING *`,
+      [title, author_id, category_id, location_id, genre, copies, staff_id, bookId]
+    );
+
+    if (updateResult.rowCount === 0) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+
+    res.json(updateResult.rows[0]);
+  } catch (err) {
+    console.error('🔥 Error updating book:', err);
+    res.status(500).json({ error: 'Server error while updating book' });
+  }
+});
+
+
+// DELETE /books/:id — Delete a book by ID
+app.delete('/books/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(`DELETE FROM books WHERE book_id = $1 RETURNING *`, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+
+    res.json({ message: 'Book deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting book:', err);
+    res.status(500).json({ error: 'Server error while deleting book' });
+  }
+});
 
 
 
+// ---------------------- GET all members ----------------------
+app.get('/members', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM members ORDER BY member_id');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching members:', err);
+    res.status(500).json({ error: 'Database error while fetching members' });
+  }
+});
+
+// ---------------------- POST new member ----------------------
 app.post('/members', async (req, res) => {
   try {
-    console.log('POST /members body:', req.body);
-
     const { name, email, membership_date } = req.body;
 
     if (!name || !email || !membership_date) {
@@ -87,14 +153,51 @@ app.post('/members', async (req, res) => {
   }
 });
 
+// ---------------------- PUT update member ----------------------
+app.put('/members/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, email, membership_date } = req.body;
 
-app.get('/members', async (req, res) => {
+  if (!name || !email || !membership_date) {
+    return res.status(400).json({ error: 'Missing required fields for update' });
+  }
+
   try {
-    const result = await pool.query('SELECT * FROM members ORDER BY member_id');
-    res.json(result.rows);
+    const updateResult = await pool.query(
+      `UPDATE members SET name = $1, email = $2, membership_date = $3 WHERE member_id = $4 RETURNING *`,
+      [name, email, membership_date, id]
+    );
+
+    if (updateResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    res.json(updateResult.rows[0]);
   } catch (err) {
-    console.error('Error fetching members:', err);
-    res.status(500).json({ error: 'Database error while fetching members' });
+    console.error('Update Error:', err);
+    res.status(500).json({ error: 'Database error while updating member' });
+  }
+});
+
+
+// ---------------------- DELETE a member ----------------------
+app.delete('/members/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleteResult = await pool.query(
+      `DELETE FROM members WHERE member_id = $1 RETURNING *`,
+      [id]
+    );
+
+    if (deleteResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    res.json({ message: 'Member deleted successfully' });
+  } catch (err) {
+    console.error('Delete Error:', err);
+    res.status(500).json({ error: 'Database error while deleting member' });
   }
 });
 
@@ -131,6 +234,42 @@ app.get('/issuebook', async (req, res) => {
   }
 });
 
+// Return Book with Fine Calculation
+app.post('/return', async (req, res) => {
+  try {
+    const { member_id, book_id, return_date } = req.body;
+
+    // Check if this book is issued and not already returned
+    const issueResult = await pool.query(
+      `SELECT * FROM issue_books WHERE member_id = $1 AND book_id = $2 AND return_date IS NULL`,
+      [member_id, book_id]
+    );
+
+    if (issueResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Book not currently issued or already returned' });
+    }
+
+    const issue = issueResult.rows[0];
+    const dueDate = new Date(issue.due_date);
+    const returnDateObj = new Date(return_date);
+
+    // Fine = ₹10 per day after due date
+    const diffInMs = returnDateObj - dueDate;
+    const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+    const fine = diffInDays > 0 ? diffInDays * 10 : 0;
+
+    // Update return date and fine
+    const updateResult = await pool.query(
+      `UPDATE issue_books SET return_date = $1, fine = $2 WHERE member_id = $3 AND book_id = $4 RETURNING *`,
+      [return_date, fine, member_id, book_id]
+    );
+
+    res.status(200).json({ message: 'Book returned successfully', fine: fine });
+  } catch (err) {
+    console.error('Return Book Error:', err);
+    res.status(500).json({ error: 'Server error while returning book' });
+  }
+});
 
 app.get('/returnbook', async (req, res) => {
   try {
@@ -331,14 +470,14 @@ app.get('/author', (req, res) => {
 });
 
 app.post('/staff', async (req, res) => {
-  const { name, email, phone, role, password } = req.body;
+  const { name, email, phone, role } = req.body;
   console.log("Incoming data:", req.body);
 
   try {
     const result = await pool.query(
-      `INSERT INTO staff (name, email, phone, role, password)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [name, email, phone, role, password]
+      `INSERT INTO staff (name, email, phone, role)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [name, email, phone, role]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -390,11 +529,11 @@ app.get('/fines', async (req, res) => {
 });
 
 // chart
-app.get('/api/most-borrowed-books', async (req, res) => {
+app.get('/most-borrowed-books', async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT b.title, COUNT(*) AS borrow_count
-      FROM issuebooks i
+      FROM issuebook i
       JOIN books b ON i.book_id = b.book_id
       GROUP BY b.title
       ORDER BY borrow_count DESC

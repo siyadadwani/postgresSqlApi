@@ -59,7 +59,6 @@
           <option value="Librarian">Librarian</option>
           <option value="Assistant">Assistant</option>
         </select>
-        <input type="password" name="password" placeholder="Password" class="w-full border px-3 py-2 rounded" required />
         <div class="flex justify-end space-x-2">
           <button type="button" id="closeModalBtn" class="bg-gray-300 px-4 py-2 rounded">Cancel</button>
           <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add</button>
@@ -89,10 +88,9 @@
         email: addStaffForm.email.value.trim(),
         phone: addStaffForm.phone.value.trim(),
         role: addStaffForm.role.value,
-        password: addStaffForm.password.value.trim()
       };
 
-      if (!formData.name || !formData.email || !formData.role || !formData.password) {
+      if (!formData.name || !formData.email || !formData.role ) {
         alert('Please fill out all required fields.');
         return;
       }
